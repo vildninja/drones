@@ -41,6 +41,7 @@ public class LineVisualizer : MonoBehaviour
             cmds.Add(new Dropdown.OptionData(cmd));
         }
         Command.options = cmds;
+        Command.value = (int)line.Cmd;
 
 
         SetupParam(0);
@@ -100,6 +101,8 @@ public class LineVisualizer : MonoBehaviour
                 _selected.captionText.text = current;
             }
         }
+
+        _selected.captionText.text = _codeLine.Params[_selected == Params[0] ? 0 : 1] + (Time.time % 1 < 0.5f ? "" : "_");
     }
 
     void Update()
@@ -117,21 +120,31 @@ public class LineVisualizer : MonoBehaviour
     public void OnCommandChanged(int command)
     {
         _selected = null;
+        if ((int)_codeLine.Cmd == command)
+            return;
         _codeLine.Cmd = (CodeLine.Instruction) command;
         Setup(_codeLine, _number);
     }
 
     public void OnParamOneChanged(int param)
     {
-        if (param == 0)
-            _selected = Params[0];
         _codeLine.Params[0] = Params[0].options[param].text;
+    }
+
+    public void OnParamOneSelected()
+    {
+        if (Params[0].value == 0)
+            _selected = Params[0];
     }
 
     public void OnParamTwoChanged(int param)
     {
-        if (param == 0)
-            _selected = Params[1];
         _codeLine.Params[1] = Params[1].options[param].text;
+    }
+
+    public void OnParamTwoSelected()
+    {
+        if (Params[1].value == 0)
+            _selected = Params[1];
     }
 }

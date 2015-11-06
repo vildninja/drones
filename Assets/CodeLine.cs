@@ -32,7 +32,7 @@ public class CodeLine
     }
 
     public Instruction Cmd;
-    public readonly string[] Params = new string[2];
+    public readonly string[] Params = new[] {"0.00", "0.00"};
     private readonly BaseRegister[] _regs = new BaseRegister[2];
 
 
