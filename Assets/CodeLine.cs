@@ -193,13 +193,13 @@ public class CodeLine
             case Instruction.GOTO:
                 return "goto line";
             case Instruction.ADD:
-                return "add a + b";
+                return "calc a + b";
             case Instruction.SUBTRACT:
-                return "subtract a - b";
+                return "calc a - b";
             case Instruction.MULTIPLY:
-                return "multiply a * b";
+                return "calc a * b";
             case Instruction.DIVIDE:
-                return "divide a / b";
+                return "calc a / b";
         }
         return "";
     }
