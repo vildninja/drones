@@ -14,6 +14,19 @@ public class LineVisualizer : MonoBehaviour
     private CodeLine _codeLine;
 
     private static Dropdown _selected;
+    private static Dropdown Selected
+    {
+        get { return _selected; }
+        set
+        {
+            if (_selected != null && _selected.captionText.text.EndsWith("_"))
+            {
+                _selected.captionText.text = _selected.captionText.text.Substring(0,
+                    _selected.captionText.text.Length - 1);
+            }
+            _selected = value;
+        }
+    }
 
     // Use this for initialization
     void Start ()
@@ -33,12 +46,12 @@ public class LineVisualizer : MonoBehaviour
         gameObject.SetActive(true);
 
         _number = number;
-        LineNumber.text = (number + 1).ToString("D2");
+        LineNumber.text = number.ToString("D2");
 
         var cmds = new List<Dropdown.OptionData>();
-        foreach (var cmd in System.Enum.GetNames(typeof(CodeLine.Instruction)))
+        foreach (CodeLine.Instruction cmd in System.Enum.GetValues(typeof(CodeLine.Instruction)))
         {
-            cmds.Add(new Dropdown.OptionData(cmd));
+            cmds.Add(new Dropdown.OptionData(CodeLine.PrettyName(cmd)));
         }
         Command.options = cmds;
         Command.value = (int)line.Cmd;
@@ -54,12 +67,17 @@ public class LineVisualizer : MonoBehaviour
         {
             Params[i].gameObject.SetActive(true);
             var options = new List<Dropdown.OptionData>();
-            options.Add(new Dropdown.OptionData(_codeLine[i].ToString("F")));
-            foreach (var register in _editor.Drone.Registers)
+            options.Add(new Dropdown.OptionData(Mathf.Approximately(_codeLine[i], 0) ? "0" : _codeLine[i].ToString("F")));
+            int selected = 0;
+            for (int j = 0; j < _editor.Drone.Registers.Count; j++)
             {
+                var register = _editor.Drone.Registers[j];
                 options.Add(new Dropdown.OptionData(register.Label));
+                if (_codeLine.Params[i] == register.Label)
+                    selected = j + 1;
             }
             Params[i].options = options;
+            Params[i].value = selected;
         }
         else
         {
@@ -69,13 +87,13 @@ public class LineVisualizer : MonoBehaviour
 
     void OnGUI()
     {
-        if (!_selected || _selected.value > 0 || (_selected != Params[0] && _selected != Params[1]))
+        if (!Selected || Selected.value > 0 || (Selected != Params[0] && Selected != Params[1]))
             return;
 
         Event e = Event.current;
         if (e.type == EventType.keyDown)
         {
-            var current = _selected.options[0].text;
+            var current = Selected.options[0].text;
             if (e.functionKey && current.Length > 0)
             {
                 switch (e.keyCode)
@@ -93,16 +111,20 @@ public class LineVisualizer : MonoBehaviour
             {
                 current += '.';
             }
-
-            if (_selected.options[0].text != current)
+            else if (e.character == '-' && current == "")
             {
-                _codeLine.Params[_selected == Params[0] ? 0 : 1] = current;
-                _selected.options[0].text = current;
-                _selected.captionText.text = current;
+                current += e.character;
+            }
+
+            if (Selected.options[0].text != current)
+            {
+                _codeLine.Params[Selected == Params[0] ? 0 : 1] = current;
+                Selected.options[0].text = current;
+                Selected.captionText.text = current;
             }
         }
 
-        _selected.captionText.text = _codeLine.Params[_selected == Params[0] ? 0 : 1] + (Time.time % 1 < 0.5f ? "" : "_");
+        Selected.captionText.text = _codeLine.Params[Selected == Params[0] ? 0 : 1] + (Time.time % 1 < 0.5f ? "" : "_");
     }
 
     void Update()
@@ -119,7 +141,7 @@ public class LineVisualizer : MonoBehaviour
 
     public void OnCommandChanged(int command)
     {
-        _selected = null;
+        Selected = null;
         if ((int)_codeLine.Cmd == command)
             return;
         _codeLine.Cmd = (CodeLine.Instruction) command;
@@ -134,7 +156,7 @@ public class LineVisualizer : MonoBehaviour
     public void OnParamOneSelected()
     {
         if (Params[0].value == 0)
-            _selected = Params[0];
+            Selected = Params[0];
     }
 
     public void OnParamTwoChanged(int param)
@@ -145,6 +167,6 @@ public class LineVisualizer : MonoBehaviour
     public void OnParamTwoSelected()
     {
         if (Params[1].value == 0)
-            _selected = Params[1];
+            Selected = Params[1];
     }
 }

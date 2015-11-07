@@ -21,18 +21,27 @@ public class CodeLine
         IF_EQUAL,
         IF_GREATER,
         IF_LESS,
+        ELSE,
+        END_IF,
         ASIGN,
         GOTO,
         ADD,
         SUBTRACT,
         MULTIPLY,
         DIVIDE,
-        SLEEP,
-        TRIGGER,
+    }
+
+    public enum IfResult
+    {
+        NONE,
+        START_FALSE,
+        START_TRUE,
+        ELSE,
+        END,
     }
 
     public Instruction Cmd;
-    public readonly string[] Params = new[] {"0.00", "0.00"};
+    public readonly string[] Params = new[] {"0", "0"};
     private readonly BaseRegister[] _regs = new BaseRegister[2];
 
 
@@ -80,8 +89,6 @@ public class CodeLine
     {
         switch (Cmd)
         {
-            case Instruction.NO_OP:
-                return 0;
             case Instruction.IF_EQUAL:
                 return 2;
             case Instruction.IF_GREATER:
@@ -100,15 +107,11 @@ public class CodeLine
                 return 2;
             case Instruction.DIVIDE:
                 return 2;
-            case Instruction.SLEEP:
-                return 1;
-            case Instruction.TRIGGER:
-                return 1;
         }
         return 0;
     }
 
-    public void Execute(ref int pointer)
+    public IfResult Execute(ref int pointer)
     {
         switch (Cmd)
         {
@@ -116,20 +119,20 @@ public class CodeLine
                 pointer++;
                 break;
             case Instruction.IF_EQUAL:
-                if (Mathf.Abs(this[0] - this[1]) > 0.01f)
-                    pointer++;
                 pointer++;
-                break;
+                if (Mathf.Abs(this[0] - this[1]) < 0.01f)
+                    return IfResult.START_TRUE;
+                return IfResult.START_FALSE;
             case Instruction.IF_GREATER:
-                if (this[0] < this[1])
-                    pointer++;
                 pointer++;
-                break;
-            case Instruction.IF_LESS:
                 if (this[0] > this[1])
-                    pointer++;
+                    return IfResult.START_TRUE;
+                return IfResult.START_FALSE;
+            case Instruction.IF_LESS:
                 pointer++;
-                break;
+                if (this[0] < this[1])
+                    return IfResult.START_TRUE;
+                return IfResult.START_FALSE;
             case Instruction.ASIGN:
                 this[0] = this[1];
                 pointer++;
@@ -156,15 +159,48 @@ public class CodeLine
                     _drone.Registers[0].Number = this[0] / this[1];
                 pointer++;
                 break;
-            case Instruction.SLEEP:
+            case Instruction.ELSE:
                 pointer++;
-                break;
-            case Instruction.TRIGGER:
+                return IfResult.ELSE;
+            case Instruction.END_IF:
                 pointer++;
-                break;
+                return IfResult.END;
             default:
                 pointer++;
                 break;
         }
+        return IfResult.NONE;
+    }
+
+    public static string PrettyName(Instruction cmd)
+    {
+        switch (cmd)
+        {
+            case Instruction.NO_OP:
+                return "";
+            case Instruction.IF_EQUAL:
+                return "if a = b";
+            case Instruction.IF_GREATER:
+                return "if a > b";
+            case Instruction.IF_LESS:
+                return "if a < b";
+            case Instruction.ELSE:
+                return "else";
+            case Instruction.END_IF:
+                return "end if";
+            case Instruction.ASIGN:
+                return "asign a <- b";
+            case Instruction.GOTO:
+                return "goto line";
+            case Instruction.ADD:
+                return "add a + b";
+            case Instruction.SUBTRACT:
+                return "subtract a - b";
+            case Instruction.MULTIPLY:
+                return "multiply a * b";
+            case Instruction.DIVIDE:
+                return "divide a / b";
+        }
+        return "";
     }
 }

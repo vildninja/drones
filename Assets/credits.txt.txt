@@ -1,0 +1,10 @@
+Developed by
+Jannek Egeskov Kristensen
+https://github.com/vildninja/drones
+
+Audio from freesound
+http://freesound.org/people/IFartInUrGeneralDirection/sounds/76421/
+http://freesound.org/people/AlaskaRobotics/sounds/221087/
+http://freesound.org/people/steveygos93/sounds/103587/
+http://freesound.org/people/mknausscat/sounds/54203/
+http://freesound.org/people/Speedenza/sounds/208509/

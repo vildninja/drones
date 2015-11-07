@@ -10,7 +10,11 @@ public class DroneEditor : MonoBehaviour
     public BaseDrone Drone;
     
     private List<RegisterVisualizer> _registers;
-    private List<LineVisualizer> _lines; 
+    private List<LineVisualizer> _lines;
+
+    public Text DroneName;
+    public Text DroneStory;
+    public ScrollRect Scroll;
 
     private void Start()
     {
@@ -59,6 +63,9 @@ public class DroneEditor : MonoBehaviour
 
         GetComponent<Canvas>().enabled = true;
 
+        DroneName.text = Drone.name;
+        DroneStory.text = Drone.Story;
+
         var outputs = _registers.Where(r => r.Type == RegisterType.OUTPUT).GetEnumerator();
         var registers = _registers.Where(r => r.Type == RegisterType.REGISTER).GetEnumerator();
         var sensors = _registers.Where(r => r.Type == RegisterType.SENSOR).GetEnumerator();
@@ -100,22 +107,23 @@ public class DroneEditor : MonoBehaviour
             }
             _lines[i].Setup(Drone.Lines[i], i);
         }
+
+
     }
 
     public void RestartDrone()
     {
         if (Drone)
         {
-            Drone.Pointer = 0;
-            Drone.Running = true;
+            Drone.Restart();
         }
     }
 
-    public void PauseDrone(bool state)
+    public void PauseDrone()
     {
         if (Drone)
         {
-            Drone.Running = state;
+            Drone.Running = !Drone.Running;
         }
     }
 
@@ -135,7 +143,34 @@ public class DroneEditor : MonoBehaviour
             SearchForDrone();
         }
 
-        
+        var ray = Camera.main.ScreenPointToRay(new Vector2());
+        float multiply = -ray.origin.z / ray.direction.z;
+        Vector2 min = ray.direction * multiply + ray.origin;
+        ray = Camera.main.ScreenPointToRay(new Vector2(Screen.width, Screen.height));
+        Vector2 max = ray.direction * multiply + ray.origin;
+
+        Bounds bounds = new Bounds(Vector3.zero, Vector3.one);
+        bounds.Encapsulate(min);
+        bounds.Encapsulate(max);
+        bounds.size += new Vector3(1, 1);
+
+        foreach (var drone in FindObjectsOfType<BaseDrone>())
+        {
+            var pos = drone.transform.position;
+            if (bounds.Contains(pos))
+                continue;
+            
+            if (pos.x < bounds.min.x)
+                pos.x = bounds.max.x;
+            if (pos.x > bounds.max.x)
+                pos.x = bounds.min.x;
+            if (pos.y < bounds.min.y)
+                pos.y = bounds.max.y;
+            if (pos.y > bounds.max.y)
+                pos.y = bounds.min.y;
+
+            drone.transform.position = pos;
+        }
     }
 
     private void SearchForDrone()
@@ -143,7 +178,6 @@ public class DroneEditor : MonoBehaviour
         var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         float multiply = -ray.origin.z/ray.direction.z;
         var world = ray.direction * multiply + ray.origin;
-        Debug.Log(Input.mousePosition + " " + ray + " -> " + world);
         var hit = Physics2D.OverlapPoint(world);
         if (hit == null)
             return;
